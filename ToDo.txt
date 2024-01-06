@@ -2,3 +2,4 @@ Mise en place du HUD
 	Noms joueurs
 	Dealer
 	Boutons
+Console de commandes sur PC host
