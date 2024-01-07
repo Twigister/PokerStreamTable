@@ -43,35 +43,47 @@ def set_eq(socket, player, eq):
         socket.call(obs_requests.SetTextGDIPlusProperties(**req))
         toggle_source_visibility(socket, source, True)
 
-def change_text(socket, player, cards, eq):
-        card_data = cards.split()
+def	is_valid_card(card):
+	value = "" + card[0]
+	suit = "" + card[1]
+	if (len(card) == 2 and "A23456789TJQK".find(value) != -1 and "♣♦♥♠".find(suit) != -1):
+		return True
+	else:
+		return False
 
-        for i in range(len(card_data)):
-                color = color_code[(card_data[i])[-1]]
-                text = card_data[i]
-                source = f"Carte{player}-{1+i}"
-                req = {"source": source, "text": text, "color": color }
-                socket.call(obs_requests.SetTextGDIPlusProperties(**req))
-                toggle_source_visibility(socket, source, True)
-        if (eq != -1):
-                set_eq(socket, player, eq)
+def change_text(socket, player, cards, eq):
+	card_data = cards.split()
+
+	for i in range(len(card_data)):
+		if is_valid_card(card_data[i]):
+			color = color_code[(card_data[i])[-1]]
+			text = card_data[i]
+		else:
+			color = 0x000000
+			text = "?"
+		source = f"Carte{player}-{1+i}"
+		req = {"source": source, "text": text, "color": color }
+		socket.call(obs_requests.SetTextGDIPlusProperties(**req))
+		toggle_source_visibility(socket, source, True)
+	if (eq != -1):
+		set_eq(socket, player, eq)
 
 def set_flop(socket, cards):
-        for i in range(len(cards)):
-                color = color_code[(cards[i])[1]]
-                text = cards[i]
-                source = f"Flop{i+1}"
-                req = {"source": source, "text": text, "color": color }
-                socket.call(obs_requests.SetTextGDIPlusProperties(**req))
-                toggle_source_visibility(socket, source, True)
+	for i in range(len(cards)):
+		color = color_code[(cards[i])[1]]
+		text = cards[i]
+		source = f"Flop{i+1}"
+		req = {"source": source, "text": text, "color": color }
+		socket.call(obs_requests.SetTextGDIPlusProperties(**req))
+		toggle_source_visibility(socket, source, True)
 
 def set_turn(socket, card):
-        color = color_code[card[1]]
-        text = card
-        source = f"Turn"
-        req = {"source": source, "text": text, "color": color }
-        socket.call(obs_requests.SetTextGDIPlusProperties(**req))
-        toggle_source_visibility(socket, source, True)
+	color = color_code[card[1]]
+	text = card
+	source = f"Turn"
+	req = {"source": source, "text": text, "color": color }
+	socket.call(obs_requests.SetTextGDIPlusProperties(**req))
+	toggle_source_visibility(socket, source, True)
 
 def set_river(socket, card):
         color = color_code[card[1]]
@@ -87,6 +99,12 @@ def fast_type(cards):
 	cards = cards.replace("d", "♦")
 	cards = cards.replace("c", "♣")
 	return cards
+
+def	set_player_names(socket, p1, p2):
+	req = {"source": "P1_name", "text": p1, "color": 0xffffff}
+	socket.call(obs_requests.SetTextGDIPlusProperties(**req))
+	req = {"source": "P2_name", "text": p2, "color": 0xffffff}
+	socket.call(obs_requests.SetTextGDIPlusProperties(**req))
 
 if __name__ == "__main__":
         host = keys.host
