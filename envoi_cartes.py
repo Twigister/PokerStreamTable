@@ -4,7 +4,7 @@ import keys
 
 color_code = { "♣": 0x00ff00, "♦": 0xfffb00, "♥": 0x0000ff, "♠": 0x000000 }
 
-def get_object_id(socket, name):
+def get_object_id(socket, source_name):
     scene = socket.call(obs_requests.GetSceneItemList())
     items = scene.datain['sceneItems']
 
