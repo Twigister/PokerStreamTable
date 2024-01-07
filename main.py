@@ -100,5 +100,5 @@ if __name__ == "__main__":
         command = input("$> ")
         if (command == "exit"):
             break
-        run_command(command)
+        run_command(command, socket)
     socket.disconnect()
