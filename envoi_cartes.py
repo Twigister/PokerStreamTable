@@ -53,8 +53,8 @@ def change_text(socket, player, cards, eq):
                 req = {"source": source, "text": text, "color": color }
                 socket.call(obs_requests.SetTextGDIPlusProperties(**req))
                 toggle_source_visibility(socket, source, True)
-
-        set_eq(socket, player, eq)
+        if (eq != -1):
+                set_eq(socket, player, eq)
 
 def set_flop(socket, cards):
         for i in range(len(cards)):

@@ -1,3 +1,3 @@
-host = "192.168.0.35"
+host = "127.0.0.1"
 port = 4444
-passw = "obscapue"
+passw = "yourpass"
