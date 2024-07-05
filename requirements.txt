@@ -1,0 +1,2 @@
+pyqt6
+obsws_python
