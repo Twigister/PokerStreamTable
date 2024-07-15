@@ -8,6 +8,7 @@ from utils import *
 import probas
 import obsws_python as obs
 import options
+import traceback
 
 class Player():
     def __init__(self, name: str, number: int):
@@ -28,11 +29,9 @@ class Player():
         cl.send("SetInputSettings", {"inputName": f"P{self.number}_stack", "inputSettings": {"text": str(stack)}})
     def setCards(self, cards: [str, str] = ["??", "??"]):
         self.cards = cards
-        print("call")
         for i in range(2):
             card = cards[i]
             if (card == "??"):
-                print("req")
                 cl.send("SetInputSettings", {"inputName": f"Carte{self.number}-{i + 1}", "inputSettings": {"text": "??", "color": 0}})
                 cl.send("SetSceneItemEnabled", {"sceneName": "Scene", "sceneItemId": get_item_id(f"Carte{self.number}-{i + 1}?", options.MainSceneName, cl), "sceneItemEnabled": True})
             elif is_valid_card(card):
@@ -178,16 +177,24 @@ class Table():
         if (len(self.board) == 0 and self.actionOn == self.dealer and self.players[int(not self.actionOn)].currentBet == self.bigBlind):
             self.players[self.actionOn].call(self.players[not int(self.actionOn)].currentBet - self.players[self.actionOn].currentBet)
             self.changeAction()
-        elif len(self.board) != 0 and self.actionOn == int(not self.dealer) and not self.players[actionOn].currentBet:
+        elif len(self.board) != 0 and self.actionOn == int(not self.dealer) and not self.players[self.actionOn].currentBet:
             self.players[self.actionOn].check()
             self.changeAction()
         else:
             self.players[self.actionOn].call(self.players[not int(self.actionOn)].currentBet - self.players[self.actionOn].currentBet)
-            self.pot = self.players[int(not self.actionOn)].currentBet * 2
+            self.pot += self.players[int(not self.actionOn)].currentBet * 2
             self.players[int(not self.actionOn)].currentBet = 0
             self.players[self.actionOn].currentBet = 0
             self.setAction(int(not self.dealer))
             cl.send("SetInputSettings", {"inputName": "Pot", "inputSettings": {"text": f"Pot: {self.pot}"}})
+            if (len(self.board) == 5):
+                for i in range(2):
+                    if self.eq[i] == 1:
+                        self.players[i].win(self.pot)
+                    elif self.eq[i] == 0.5:
+                        self.players[i].win(self.pot / 2)
+                    else:
+                        self.players[i].loses()
     def bet(self, amount: int):
         self.players[self.actionOn].bet(amount, self.players[int(not self.actionOn)].currentBet)
         self.changeAction()
@@ -195,6 +202,12 @@ class Table():
         self.players[int(not self.actionOn)].win(self.pot + self.players[self.actionOn].currentBet)
         self.players[self.actionOn].fold()
         self.changeDealer()
+    def newHand(self):
+        self.changeDealer()
+        self.setBoard()
+        for player in self.players:
+            player.setCards()
+        self.postBlinds()
 
 class PlayerWidget(QWidget):
     def __init__(self, number: int, table: Table):
@@ -319,8 +332,8 @@ class Window(QWidget):
         buttondealer.clicked.connect(self.table.changeDealer)
         buttonBlinds = QPushButton("Set blinds", self)
         buttonBlinds.clicked.connect(self.setBlinds)
-        buttonReset = QPushButton("Reset cards", self)
-        buttonReset.clicked.connect(self.resetCards)
+        buttonNewHand = QPushButton("New Hand", self)
+        buttonNewHand.clicked.connect(self.table.newHand)
         buttonEQ = QPushButton("EQ calculator", self)
         buttonEQ.clicked.connect(self.calcEq)
         buttonPostBlinds = QPushButton("Post Blinds", self)
@@ -349,7 +362,7 @@ class Window(QWidget):
         layout.addWidget(buttonBoard)
         layout.addWidget(buttondealer)
         layout.addWidget(buttonBlinds)
-        layout.addWidget(buttonReset)
+        layout.addWidget(buttonNewHand)
         layout.addWidget(buttonEQ)
         layout.addWidget(buttonPostBlinds)
         layout.addWidget(buttonCall)
@@ -362,13 +375,16 @@ class Window(QWidget):
                 board = self.inputLine.text().split(" ")
             else:
                 board = []
-            if not valid_config(self.table.players[0].cards, self.table.players[1].cards, self.table.board):
+            for i in range(len(board)):
+                board[i] = fast_type(board[i])
+            if not valid_config(self.table.players[0].cards, self.table.players[1].cards, board):
                 raise CustomErr
             self.table.setBoard(board)
             self.calcEq()
             self.label.setText("Successfully updated board")
         except Exception as e:
             print(e)
+            traceback.print_exc()
             self.label.setText("Error: Invalid cards")
     def setBlinds(self):
         try:
@@ -384,7 +400,6 @@ class Window(QWidget):
         self.table.resetCards()
         self.PlayersWidget.P1.resetCards()
         self.PlayersWidget.P2.resetCards()
-        print("Uh huh")
     def calcEq(self):
         try:
             self.table.calcEq()
@@ -435,6 +450,7 @@ if __name__ == "__main__":
         cl = obs.ReqClient(host=keys.host, port=keys.port, password=keys.passw, timeout=3)
         window = Window()
         window.show()
+
         sys.exit(app.exec())
         cl.close()
     except Exception as e:
