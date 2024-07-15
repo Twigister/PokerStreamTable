@@ -28,11 +28,11 @@ class Player():
         cl.send("SetInputSettings", {"inputName": f"P{self.number}_stack", "inputSettings": {"text": str(stack)}})
     def setCards(self, cards: [str, str] = ["??", "??"]):
         self.cards = cards
-        print(cards)
+        print("call")
         for i in range(2):
             card = cards[i]
-            print(card)
             if (card == "??"):
+                print("req")
                 cl.send("SetInputSettings", {"inputName": f"Carte{self.number}-{i + 1}", "inputSettings": {"text": "??", "color": 0}})
                 cl.send("SetSceneItemEnabled", {"sceneName": "Scene", "sceneItemId": get_item_id(f"Carte{self.number}-{i + 1}?", options.MainSceneName, cl), "sceneItemEnabled": True})
             elif is_valid_card(card):
@@ -98,7 +98,6 @@ class Table():
         self.resetCards()
         self.changeDealer()
         self.sendAll()
-
     def changeDealer(self):
         self.dealer = (self.dealer + 1) % 2
         cl.send("SetInputSettings", {"inputName": f"P{self.dealer+1}dealer", "inputSettings": {"text": "BU"}})
@@ -123,9 +122,9 @@ class Table():
         self.board = board
     def resetCards(self):
         self.setBoard([])
-        self.P1.setCards(["??", "??"])
-        self.P2.setCards(["??", "??"])
-        self.hideAll()
+        self.players[0].setCards()
+        self.players[1].setCards()
+        # self.hideAll()
         cl.send("SetInputSettings", {"inputName": "EQ1", "inputSettings": {"text": "{0:.0f}%".format(0.5 * 100)}})
         cl.send("SetInputSettings", {"inputName": "EQ2", "inputSettings": {"text": "{0:.0f}%".format(0.5 * 100)}})
         self.pot = 0
@@ -284,6 +283,10 @@ class PlayerWidget(QWidget):
         self.setCurrentBet()
         self.setCurrentStack()
         self.calcProfit()
+    def resetCards(self):
+        self.eq.setText("Eq: 50%")
+        self.table.players[self.number].setCards()
+        self.cards.setText('["??", "??"]')
 
 class PlayersWidget(QWidget):
     def __init__(self, P1: PlayerWidget, P2: PlayerWidget):
@@ -378,7 +381,10 @@ class Window(QWidget):
             print(e)
             self.label.setText("Error: Invalid input")
     def resetCards(self):
-        self.table.resetCards()        
+        self.table.resetCards()
+        self.PlayersWidget.P1.resetCards()
+        self.PlayersWidget.P2.resetCards()
+        print("Uh huh")
     def calcEq(self):
         try:
             self.table.calcEq()
