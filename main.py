@@ -31,12 +31,14 @@ class Player():
         self.cards = cards
         for i in range(2):
             card = cards[i]
+            sceneName = options.playerScene[self.number - 1]
+            sourceName = f"Carte{self.number}-{i + 1}"
             if (card == "??"):
-                cl.send("SetInputSettings", {"inputName": f"Carte{self.number}-{i + 1}", "inputSettings": {"text": "??", "color": 0}})
-                cl.send("SetSceneItemEnabled", {"sceneName": "Scene", "sceneItemId": get_item_id(f"Carte{self.number}-{i + 1}?", options.MainSceneName, cl), "sceneItemEnabled": True})
+                cl.send("SetInputSettings", {"inputName": sourceName, "inputSettings": {"text": "??", "color": 0}})
+                cl.send("SetSceneItemEnabled", {"sceneName": sceneName, "sceneItemId": get_item_id(f"{sourceName}?", sceneName, cl), "sceneItemEnabled": True})
             elif is_valid_card(card):
-                cl.send("SetInputSettings", {"inputName": f"Carte{self.number}-{i + 1}", "inputSettings": {"text": cards[i], "color": color_code[cards[i][1]]}})
-                cl.send("SetSceneItemEnabled", {"sceneName": "Scene", "sceneItemId": get_item_id(f"Carte{self.number}-{i + 1}?", options.MainSceneName, cl), "sceneItemEnabled": False})
+                cl.send("SetInputSettings", {"inputName": sourceName, "inputSettings": {"text": cards[i], "color": color_code[cards[i][1]]}})
+                cl.send("SetSceneItemEnabled", {"sceneName": sceneName, "sceneItemId": get_item_id(f"{sourceName}?", sceneName, cl), "sceneItemEnabled": False})
             else:
                 self.setCards()
     def addon(self, amount: int):
@@ -114,10 +116,10 @@ class Table():
             if i < len(board):
                 color = color_code[board[i][1]]
                 cl.send("SetInputSettings", {"inputName": f"Board{i+1}", "inputSettings": {"text": board[i], "color": color}})
-                cl.send("SetSceneItemEnabled", {"sceneName": "Scene", "sceneItemId": get_item_id(f"Board{i+1}?", options.MainSceneName, cl), "sceneItemEnabled": False})
+                cl.send("SetSceneItemEnabled", {"sceneName": options.boardScene, "sceneItemId": get_item_id(f"Board{i+1}?", options.boardScene, cl), "sceneItemEnabled": False})
             else:
                 cl.send("SetInputSettings", {"inputName": f"Board{i+1}", "inputSettings": {"text": "?", "color": 0xffffff}})
-                cl.send("SetSceneItemEnabled", {"sceneName": "Scene", "sceneItemId": get_item_id(f"Board{i+1}?", options.MainSceneName, cl), "sceneItemEnabled": True})
+                cl.send("SetSceneItemEnabled", {"sceneName": options.boardScene, "sceneItemId": get_item_id(f"Board{i+1}?", options.boardScene, cl), "sceneItemEnabled": True})
         self.board = board
     def resetCards(self):
         self.setBoard([])
