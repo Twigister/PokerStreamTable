@@ -1,11 +1,13 @@
 from PyQt6.QtWidgets import QApplication, QVBoxLayout, QHBoxLayout, QGridLayout, QWidget, QLabel, QPushButton, QLineEdit
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
+from PyQt6 import QtGui
 import sys
 import keys
 from utils import *
 import probas
 import obsws_python as obs
+import options
 
 class Player():
     def __init__(self, name: str, number: int):
@@ -32,10 +34,10 @@ class Player():
             print(card)
             if (card == "??"):
                 cl.send("SetInputSettings", {"inputName": f"Carte{self.number}-{i + 1}", "inputSettings": {"text": "??", "color": 0}})
-                cl.send("SetSceneItemEnabled", {"sceneName": "Scene", "sceneItemId": get_item_id(f"Carte{self.number}-{i + 1}?", cl), "sceneItemEnabled": True})
+                cl.send("SetSceneItemEnabled", {"sceneName": "Scene", "sceneItemId": get_item_id(f"Carte{self.number}-{i + 1}?", options.MainSceneName, cl), "sceneItemEnabled": True})
             elif is_valid_card(card):
                 cl.send("SetInputSettings", {"inputName": f"Carte{self.number}-{i + 1}", "inputSettings": {"text": cards[i], "color": color_code[cards[i][1]]}})
-                cl.send("SetSceneItemEnabled", {"sceneName": "Scene", "sceneItemId": get_item_id(f"Carte{self.number}-{i + 1}?", cl), "sceneItemEnabled": False})
+                cl.send("SetSceneItemEnabled", {"sceneName": "Scene", "sceneItemId": get_item_id(f"Carte{self.number}-{i + 1}?", options.MainSceneName, cl), "sceneItemEnabled": False})
             else:
                 self.setCards()
     def addon(self, amount: int):
@@ -114,10 +116,10 @@ class Table():
             if i < len(board):
                 color = color_code[board[i][1]]
                 cl.send("SetInputSettings", {"inputName": f"Board{i+1}", "inputSettings": {"text": board[i], "color": color}})
-                cl.send("SetSceneItemEnabled", {"sceneName": "Scene", "sceneItemId": get_item_id(f"Board{i+1}?", cl), "sceneItemEnabled": False})
+                cl.send("SetSceneItemEnabled", {"sceneName": "Scene", "sceneItemId": get_item_id(f"Board{i+1}?", options.MainSceneName, cl), "sceneItemEnabled": False})
             else:
                 cl.send("SetInputSettings", {"inputName": f"Board{i+1}", "inputSettings": {"text": "?", "color": 0xffffff}})
-                cl.send("SetSceneItemEnabled", {"sceneName": "Scene", "sceneItemId": get_item_id(f"Board{i+1}?", cl), "sceneItemEnabled": True})
+                cl.send("SetSceneItemEnabled", {"sceneName": "Scene", "sceneItemId": get_item_id(f"Board{i+1}?", options.MainSceneName, cl), "sceneItemEnabled": True})
         self.board = board
     def resetCards(self):
         self.setBoard([])
@@ -167,7 +169,7 @@ class Table():
         self.actionOn = (n + 1) % 2
         self.changeAction()
     def changeAction(self):
-        id = get_item_id("ActionArrow", cl)
+        id = get_item_id("ActionArrow", options.MainSceneName, cl)
         self.actionOn = (self.actionOn + 1) % 2
         cl.send("SetSceneItemTransform", {"sceneName": "Scene", "sceneItemId": id, "sceneItemTransform": {"positionY": 110 + self.actionOn * 570}})
     def postBlinds(self):
@@ -211,6 +213,7 @@ class PlayerWidget(QWidget):
         self.inputLine = QLineEdit(parent=self)
         self.name = QLabel(table.players[number].name)
         self.stack = QLabel(f"Stack: {self.table.players[number].stack}")
+        self.profit = QLabel((f"Profit: {0}"))
         self.eq = QLabel("Current EQ: 50%")
         self.cards = QLabel("Cards: " + str(["?", "?"]))
         self.currentBet = QLabel("Current bet: 0")
@@ -225,6 +228,7 @@ class PlayerWidget(QWidget):
         layout.addWidget(buttonStack, 3, 0, 1, 1)
         layout.addWidget(buttonAddon, 3, 1, 1, 1)
         layout.addWidget(self.stack, 3, 2, 1, 1)
+        layout.addWidget(self.profit, 3, 3, 1, 1)
         layout.addWidget(buttonCards, 4, 0)
         layout.addWidget(self.cards, 4, 1)
         layout.addWidget(self.currentBet, 4, 2)
@@ -238,7 +242,7 @@ class PlayerWidget(QWidget):
             value = int(self.inputLine.text())
             self.table.players[self.number].setStack(value)
             self.label.setText(f"Changed P1 stack to {self.table.players[self.number].stack}")
-            self.stack.setText(str(self.table.players[self.number].stack))
+            self.stack.setText(f"Stack: {self.table.players[self.number].stack}")
         except Exception as e:
             print(e)
             self.label.setText("Error: Must be an integer value")
@@ -273,10 +277,13 @@ class PlayerWidget(QWidget):
         self.currentBet.setText(f"Current bet: {self.table.players[self.number].currentBet}")
     def setCurrentStack(self):
         self.stack.setText(f"Stack: {self.table.players[self.number].stack}")
+    def calcProfit(self):
+        self.profit.setText(f"Profit: {self.table.players[self.number].stack - self.table.players[self.number].deposit}")
     def refresh(self):
         self.setEq()
         self.setCurrentBet()
         self.setCurrentStack()
+        self.calcProfit()
 
 class PlayersWidget(QWidget):
     def __init__(self, P1: PlayerWidget, P2: PlayerWidget):
@@ -296,6 +303,7 @@ class Window(QWidget):
         self.setWindowTitle("Poker Stream Deck")
         self.table = Table()
         self.PlayersWidget = PlayersWidget(PlayerWidget(0, self.table), PlayerWidget(1, self.table))
+        self.setWindowIcon(QtGui.QIcon('logo.png'))
 
         layout = QVBoxLayout()
         self.setLayout(layout)
@@ -321,8 +329,18 @@ class Window(QWidget):
         buttonFold = QPushButton("Fold", self)
         buttonFold.clicked.connect(self.fold)
 
+        changeToMain = QPushButton("Change to main scene")
+        changeToMain.clicked.connect(self.swapSceneMain)
+        layout.addWidget(changeToMain)
+
+        changeToResults = QPushButton("Change to results")
+        changeToResults.clicked.connect(self.swapSceneResults)
+        layout.addWidget(changeToResults)
+
         self.label = QLabel("Coucou toi")
         layout.addWidget(self.PlayersWidget)
+
+
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.label)
         layout.addWidget(buttonBoard)
@@ -335,7 +353,6 @@ class Window(QWidget):
         layout.addWidget(buttonBet)
         layout.addWidget(buttonFold)
         layout.addWidget(self.inputLine)
-
     def setBoard(self):
         try:
             if (self.inputLine.text() != ""):
@@ -373,26 +390,38 @@ class Window(QWidget):
             self.label.setText("Error in eq calculation")
     def postBlinds(self):
         self.table.postBlinds()
-        self.P1Widget.refresh()
-        self.P2Widget.refresh()
+        self.PlayersWidget.P1.refresh()
+        self.PlayersWidget.P2.refresh()
     def call(self):
         self.table.call()
-        self.P1Widget.refresh()
-        self.P2Widget.refresh()
+        self.PlayersWidget.P1.refresh()
+        self.PlayersWidget.P2.refresh()
     def bet(self):
         amount = self.inputLine.text()
         try:
             amount = int(amount)
             self.table.bet(amount)
-            self.P1Widget.refresh()
-            self.P2Widget.refresh()
+            self.PlayersWidget.P1.refresh()
+            self.PlayersWidget.P2.refresh()
         except Exception as e:
             print(e)
             self.label.setText("Error: Should be a positive number")
     def fold(self):
         self.table.fold()
-        self.P1Widget.refresh()
-        self.P2Widget.refresh()
+        self.PlayersWidget.P1.refresh()
+        self.PlayersWidget.P2.refresh()
+    def swapSceneMain(self):
+        cl.send("SetCurrentProgramScene", {"sceneName": options.MainSceneName})
+    def swapSceneResults(self):
+        P1_profit = self.table.players[0].stack - self.table.players[0].deposit
+        cl.send("SetCurrentProgramScene", {"sceneName": options.ResultsSceneName})
+        cl.send("SetInputSettings", {"inputName": "P1_profit", "inputSettings": {"text": str(P1_profit)}})
+        cl.send("SetInputSettings", {"inputName": "P2_profit", "inputSettings": {"text": str(-P1_profit)}})
+        cl.send("SetSceneItemTransform", {"sceneName": options.ResultsSceneName, "sceneItemId": get_item_id("P1_profit", options.ResultsSceneName, cl), "sceneItemTransform": {"positionY": 230 + int(P1_profit <= 0) * 355}})
+        cl.send("SetSceneItemTransform", {"sceneName": options.ResultsSceneName, "sceneItemId": get_item_id("P2_profit", options.ResultsSceneName, cl), "sceneItemTransform": {"positionY": 230 + int(P1_profit > 0) * 355}})
+        cl.send("SetSceneItemTransform", {"sceneName": options.ResultsSceneName, "sceneItemId": get_item_id("P1_name", options.ResultsSceneName, cl), "sceneItemTransform": {"positionY": 230 + int(P1_profit <= 0) * 355}})
+        cl.send("SetSceneItemTransform", {"sceneName": options.ResultsSceneName, "sceneItemId": get_item_id("P2_name", options.ResultsSceneName, cl), "sceneItemTransform": {"positionY": 230 + int(P1_profit > 0) * 355}})
+
 
 if __name__ == "__main__":
     try:

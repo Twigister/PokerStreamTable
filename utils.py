@@ -1,6 +1,4 @@
-color_code = { "♣": 0x268500, "♦": 0x911147, "♥": 0x0000ff, "♠": 0x000000 }
-# color_code = { "♣": 0x268500, "♦": 0x910500, "♥": 0x0000ff, "♠": 0x000000 }
-# color_code = { "♣": 0x00ff00, "♦": 0xfffb00, "♥": 0x0000ff, "♠": 0x000000 }
+from options import color_code
 
 def fast_type(cards):
 	cards = cards.replace("h", "♥")
@@ -29,8 +27,8 @@ def valid_config(p1, p2, board):
     if (len(l) != len(set(l))):
         return False
     return True
-def get_item_id(name: str, cl):
-    resp = cl.send("GetSceneItemList", {"sceneName": "Scene"})
+def get_item_id(name: str, sceneName: str, cl):
+    resp = cl.send("GetSceneItemList", {"sceneName": sceneName})
     for item in resp.scene_items:
         if item["sourceName"] == name:
             return item["sceneItemId"]
