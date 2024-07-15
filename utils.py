@@ -22,7 +22,12 @@ def	is_valid_card(card):
 	else:
 		return False
 def valid_config(p1, p2, board):
-    #TODO
+    l = p1 + p2 + board
+    for card in l:
+        if not is_valid_card(card):
+            return False
+    if (len(l) != len(set(l))):
+        return False
     return True
 def get_item_id(name: str, cl):
     resp = cl.send("GetSceneItemList", {"sceneName": "Scene"})

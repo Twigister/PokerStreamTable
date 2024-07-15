@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QApplication, QVBoxLayout, QWidget, QLabel, QPushButton, QLineEdit
+from PyQt6.QtWidgets import QApplication, QVBoxLayout, QHBoxLayout, QGridLayout, QWidget, QLabel, QPushButton, QLineEdit
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 import sys
@@ -15,7 +15,8 @@ class Player():
         self.stack = 0
         self.currentBet = 0
         self.deposit = 0
-        self.cards = ["?", "?"]
+        self.cards = ["??", "??"]
+        cl.send("SetInputSettings", {"inputName": f"P{self.number}_action", "inputSettings": {"text": "Sat in"}})
     def setName(self, name: str):
         self.name = name
         cl.send("SetInputSettings", {"inputName": f"P{self.number}_name", "inputSettings": {"text": name}})
@@ -23,11 +24,13 @@ class Player():
         self.stack = stack
         self.deposit = stack
         cl.send("SetInputSettings", {"inputName": f"P{self.number}_stack", "inputSettings": {"text": str(stack)}})
-    def setCards(self, cards: [str, str] = ["?", "?"]):
+    def setCards(self, cards: [str, str] = ["??", "??"]):
         self.cards = cards
+        print(cards)
         for i in range(2):
             card = cards[i]
-            if (card == "?"):
+            print(card)
+            if (card == "??"):
                 cl.send("SetInputSettings", {"inputName": f"Carte{self.number}-{i + 1}", "inputSettings": {"text": "??", "color": 0}})
                 cl.send("SetSceneItemEnabled", {"sceneName": "Scene", "sceneItemId": get_item_id(f"Carte{self.number}-{i + 1}?", cl), "sceneItemEnabled": True})
             elif is_valid_card(card):
@@ -56,7 +59,6 @@ class Player():
         else:
             message = f"Bets {amount}"
         cl.send("SetInputSettings", {"inputName": f"P{self.number}_action", "inputSettings": {"text": message}})
-        print(self.stack)
         cl.send("SetInputSettings", {"inputName": f"P{self.number}_stack", "inputSettings": {"text": str(self.stack)}})
     def call(self, amount: int):
         if (amount == 0):
@@ -86,6 +88,7 @@ class Table():
         self.players = [self.P1, self.P2]
         self.pot = 0
         self.board = []
+        self.eq = [0.5, 0.5]
         self.actionOn = 1
         self.dealer = 1
         self.smallBlind = 1
@@ -94,7 +97,6 @@ class Table():
         self.changeDealer()
         self.sendAll()
 
-    # Setters
     def changeDealer(self):
         self.dealer = (self.dealer + 1) % 2
         cl.send("SetInputSettings", {"inputName": f"P{self.dealer+1}dealer", "inputSettings": {"text": "BU"}})
@@ -119,8 +121,8 @@ class Table():
         self.board = board
     def resetCards(self):
         self.setBoard([])
-        self.P1.setCards(["?", "?"])
-        self.P2.setCards(["?", "?"])
+        self.P1.setCards(["??", "??"])
+        self.P2.setCards(["??", "??"])
         self.hideAll()
         cl.send("SetInputSettings", {"inputName": "EQ1", "inputSettings": {"text": "{0:.0f}%".format(0.5 * 100)}})
         cl.send("SetInputSettings", {"inputName": "EQ2", "inputSettings": {"text": "{0:.0f}%".format(0.5 * 100)}})
@@ -138,12 +140,11 @@ class Table():
                 cards[i] = un_fast_type(cards[i])
             for i in range(len(board)):
                 board[i] = un_fast_type(board[i])
-            eq = probas.get_eq(cards, board)
-            cl.send("SetInputSettings", {"inputName": "EQ1", "inputSettings": {"text": "{0:.0f}%".format(eq[0] * 100)}})
-            cl.send("SetInputSettings", {"inputName": "EQ2", "inputSettings": {"text": "{0:.0f}%".format(eq[1] * 100)}})
+            self.eq = probas.get_eq(cards, board)
+            cl.send("SetInputSettings", {"inputName": "EQ1", "inputSettings": {"text": "{0:.0f}%".format(self.eq[0] * 100)}})
+            cl.send("SetInputSettings", {"inputName": "EQ2", "inputSettings": {"text": "{0:.0f}%".format(self.eq[1] * 100)}})
         else:
             raise CustomErr
-
     def sendAll(self):
         cl.send("SetInputSettings", {"inputName": "P1_name", "inputSettings": {"text": self.P1.name}})
         cl.send("SetInputSettings", {"inputName": "P2_name", "inputSettings": {"text": self.P2.name}})
@@ -173,10 +174,10 @@ class Table():
         self.players[self.dealer].postBlinds(self.smallBlind, False)
         self.players[int(not self.dealer)].postBlinds(self.bigBlind, True)
     def call(self):
-        if (len(self.board) == 0 and self.actionOn == self.dealer and self.players[int(not self.actionOn)].currentBet != self.bigBlind):
+        if (len(self.board) == 0 and self.actionOn == self.dealer and self.players[int(not self.actionOn)].currentBet == self.bigBlind):
             self.players[self.actionOn].call(self.players[not int(self.actionOn)].currentBet - self.players[self.actionOn].currentBet)
             self.changeAction()
-        elif len(self.board) != 0 and self.ActionArrow == int(not self.dealer) and not self.players[actionOn].currentBet:
+        elif len(self.board) != 0 and self.actionOn == int(not self.dealer) and not self.players[actionOn].currentBet:
             self.players[self.actionOn].check()
             self.changeAction()
         else:
@@ -194,6 +195,99 @@ class Table():
         self.players[self.actionOn].fold()
         self.changeDealer()
 
+class PlayerWidget(QWidget):
+    def __init__(self, number: int, table: Table):
+        super().__init__()
+        self.number = number
+        self.table = table
+        buttonName = QPushButton("Set player name", self)
+        buttonName.clicked.connect(self.changeName)
+        buttonStack = QPushButton("Set player stack", self)
+        buttonStack.clicked.connect(self.setStack)
+        buttonAddon = QPushButton("Addon Player", self)
+        buttonAddon.clicked.connect(self.addon)
+        buttonCards = QPushButton("Set player cards", self)
+        buttonCards.clicked.connect(self.setCards)
+        self.inputLine = QLineEdit(parent=self)
+        self.name = QLabel(table.players[number].name)
+        self.stack = QLabel(f"Stack: {self.table.players[number].stack}")
+        self.eq = QLabel("Current EQ: 50%")
+        self.cards = QLabel("Cards: " + str(["?", "?"]))
+        self.currentBet = QLabel("Current bet: 0")
+        self.label = QLabel(f"P{self.number + 1} dashboard")
+
+        layout = QGridLayout()
+        self.setLayout(layout)
+        layout.addWidget(self.label, 0, 0, 1, 4)
+        layout.addWidget(self.inputLine, 1, 0, 1, 4)
+        layout.addWidget(buttonName, 2, 0, 1, 2)
+        layout.addWidget(self.name, 2, 2, 1, 1)
+        layout.addWidget(buttonStack, 3, 0, 1, 1)
+        layout.addWidget(buttonAddon, 3, 1, 1, 1)
+        layout.addWidget(self.stack, 3, 2, 1, 1)
+        layout.addWidget(buttonCards, 4, 0)
+        layout.addWidget(self.cards, 4, 1)
+        layout.addWidget(self.currentBet, 4, 2)
+        layout.addWidget(self.eq, 4, 3)
+    def changeName(self):
+        self.table.players[self.number].setName(self.inputLine.text())
+        self.label.setText(f"Changed P{self.number + 1} name to: {self.table.players[self.number].name}")
+        self.name.setText(self.table.players[self.number].name)
+    def setStack(self):
+        try:
+            value = int(self.inputLine.text())
+            self.table.players[self.number].setStack(value)
+            self.label.setText(f"Changed P1 stack to {self.table.players[self.number].stack}")
+            self.stack.setText(str(self.table.players[self.number].stack))
+        except Exception as e:
+            print(e)
+            self.label.setText("Error: Must be an integer value")
+    def addon(self):
+        try:
+            value = int(self.inputLine.text())
+            if (value <= 0):
+                raise Exception()                
+            self.table.players[self.number].addon(value)
+            self.label.setText(f"Addon {value} to {self.table.players[self.number].stack}")
+            self.stack.setText(str(self.table.players[self.number].stack))
+        except Exception as e:
+            print(e)
+            self.label.setText("Error: Must be an integer value")
+    def setCards(self):
+        cards = self.inputLine.text().split(" ")
+        if (len(cards) != 2):
+            self.label.setText("Error: number of cards invalid")
+        else:
+            for i in range(2):
+                cards[i] = fast_type(cards[i])
+            try:
+                self.table.players[self.number].setCards(cards)
+                self.label.setText("P1 cards update Success")
+                self.cards.setText(str(cards))
+            except Exception as e:
+                print(e)
+                self.label.setText("Error: Invalid card")
+    def setEq(self):
+        self.eq.setText("{0:.0f}%".format(self.table.eq[self.number] * 100))
+    def setCurrentBet(self):
+        self.currentBet.setText(f"Current bet: {self.table.players[self.number].currentBet}")
+    def setCurrentStack(self):
+        self.stack.setText(f"Stack: {self.table.players[self.number].stack}")
+    def refresh(self):
+        self.setEq()
+        self.setCurrentBet()
+        self.setCurrentStack()
+
+class PlayersWidget(QWidget):
+    def __init__(self, P1: PlayerWidget, P2: PlayerWidget):
+        super().__init__()
+        layout = QHBoxLayout()
+        self.setLayout(layout)
+        self.resize(400, 600)
+        self.P1 = P1
+        self.P2 = P2
+        layout.addWidget(P1)
+        layout.addWidget(P2)
 
 class Window(QWidget):
     def __init__(self):
@@ -201,31 +295,15 @@ class Window(QWidget):
         self.resize(800, 600)
         self.setWindowTitle("Poker Stream Deck")
         self.table = Table()
-        # self.setWindowIcon(QIcon("coucou.jpg"))
+        self.PlayersWidget = PlayersWidget(PlayerWidget(0, self.table), PlayerWidget(1, self.table))
 
         layout = QVBoxLayout()
         self.setLayout(layout)
 
         self.inputLine = QLineEdit(parent=self)
 
-        buttonNameP1 = QPushButton("Set P1 name", self)
-        buttonNameP1.clicked.connect(self.changeP1Name)
-        buttonStackP1 = QPushButton("Set P1 stack", self)
-        buttonStackP1.clicked.connect(self.setP1stack)        
-        buttonAddonP1 = QPushButton("Addon P1", self)
-        buttonAddonP1.clicked.connect(self.addonP1)
-        buttonNameP2 = QPushButton("Set P2 name", self)
-        buttonNameP2.clicked.connect(self.changeP2Name)
-        buttonStackP2 = QPushButton("Set P2 stack", self)
-        buttonStackP2.clicked.connect(self.setP2stack)
-        buttonAddonP2 = QPushButton("Addon P2", self)
-        buttonAddonP2.clicked.connect(self.addonP2)
-        buttonboard = QPushButton("Set board", self)
-        buttonboard.clicked.connect(self.setBoard)
-        buttoncards1 = QPushButton("Set P1 cards", self)
-        buttoncards1.clicked.connect(self.setP1Cards)
-        buttoncards2 = QPushButton("Set P2 cards", self)
-        buttoncards2.clicked.connect(self.setP2Cards)
+        buttonBoard = QPushButton("Set board", self)
+        buttonBoard.clicked.connect(self.setBoard)
         buttondealer = QPushButton("Change Dealer", self)
         buttondealer.clicked.connect(self.table.changeDealer)
         buttonBlinds = QPushButton("Set blinds", self)
@@ -244,17 +322,10 @@ class Window(QWidget):
         buttonFold.clicked.connect(self.fold)
 
         self.label = QLabel("Coucou toi")
+        layout.addWidget(self.PlayersWidget)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.label)
-        layout.addWidget(buttonNameP1)
-        layout.addWidget(buttonStackP1)
-        layout.addWidget(buttonAddonP1)
-        layout.addWidget(buttonNameP2)
-        layout.addWidget(buttonStackP2)
-        layout.addWidget(buttonAddonP2)
-        layout.addWidget(buttonboard)
-        layout.addWidget(buttoncards1)
-        layout.addWidget(buttoncards2)
+        layout.addWidget(buttonBoard)
         layout.addWidget(buttondealer)
         layout.addWidget(buttonBlinds)
         layout.addWidget(buttonReset)
@@ -265,102 +336,20 @@ class Window(QWidget):
         layout.addWidget(buttonFold)
         layout.addWidget(self.inputLine)
 
-        self.P1name = QLabel(self.table.P1.name)
-        self.P2name = QLabel(self.table.P2.name)
-        self.P1stack = QLabel(str(self.table.P1.stack))
-        self.P2stack = QLabel(str(self.table.P2.stack))
-        self.P1cards = QLabel(str(self.table.P1.cards))
-        self.P2cards = QLabel(str(self.table.P2.cards))
-        layout.addWidget(self.P1name)
-        layout.addWidget(self.P1stack)
-        layout.addWidget(self.P1cards)
-        layout.addWidget(self.P2name)
-        layout.addWidget(self.P2stack)
-        layout.addWidget(self.P2cards)
-
-    def changeP1Name(self):
-        self.table.P1.setName(self.inputLine.text())
-        self.label.setText(f"Changed P1 name to: {self.table.P1.name}")
-        self.P1name.setText(self.table.P1.name)
-    def changeP2Name(self):
-        self.table.P2.setName(self.inputLine.text())
-        self.label.setText(f"Changed P2 name to: {self.table.P2.name}")
-        self.P2name.setText(self.table.P2.name)
-    def setP1stack(self):
-        try:
-            value = int(self.inputLine.text())
-            self.table.P1.setStack(value)
-            self.label.setText(f"Changed P1 stack to {self.table.P1.stack}")
-            self.P1stack.setText(str(self.table.P1.stack))
-        except:
-            self.label.setText("Error: Must be an integer value")
-    def setP2stack(self):
-        try:
-            value = int(self.inputLine.text())
-            self.table.P2.setStack(value)
-            self.label.setText(f"Changed P2 stack to {self.table.P2.stack}")
-            self.P2stack.setText(str(self.table.P2.stack))
-        except:
-            self.label.setText("Error: Must be an integer value")
-    def addonP1(self):
-        try:
-            value = int(self.inputLine.text())
-            if (value <= 0):
-                raise Exception()                
-            self.table.P1.addon(value)
-            self.label.setText(f"Addon {value} to {self.table.P1.stack}")
-            self.P1stack.setText(str(self.table.P1.stack))
-        except:
-            self.label.setText("Error: Must be an integer value")
-    def addonP2(self):
-        try:
-            value = int(self.inputLine.text())
-            if (value <= 0):
-                raise Exception()
-            self.table.P2.addon(value)
-            self.label.setText(f"Addon {value} to {self.table.P2.stack}")
-            self.P2stack.setText(str(self.table.P2.stack))
-        except:
-            self.label.setText("Error: Must be an integer value")
     def setBoard(self):
         try:
             if (self.inputLine.text() != ""):
                 board = self.inputLine.text().split(" ")
             else:
                 board = []
+            if not valid_config(self.table.players[0].cards, self.table.players[1].cards, self.table.board):
+                raise CustomErr
             self.table.setBoard(board)
+            self.calcEq()
             self.label.setText("Successfully updated board")
         except Exception as e:
             print(e)
             self.label.setText("Error: Invalid cards")
-    def setP1Cards(self):
-        cards = self.inputLine.text().split(" ")
-        if (len(cards) != 2):
-            self.label.setText("Error: number of cards invalid")
-        else:
-            for i in range(2):
-                cards[i] = fast_type(cards[i])
-            try:
-                self.table.P1.setCards(cards)
-                self.label.setText("P1 cards update Success")
-                self.P1cards.setText(str(cards))
-            except Exception as e:
-                print(e)
-                self.label.setText("Error: Invalid card")
-    def setP2Cards(self):
-        cards = self.inputLine.text().split(" ")
-        if (len(cards) != 2):
-            self.label.setText("Error: number of cards invalid")
-        else:
-            for i in range(2):
-                cards[i] = fast_type(cards[i])
-            try:
-                self.table.P2.setCards(cards)
-                self.label.setText("P2 cards update Success")
-                self.P2cards.setText(str(cards))
-            except Exception as e:
-                print(e)
-                self.label.setText("Error: Invalid card")
     def setBlinds(self):
         try:
             tab = self.inputLine.text()
@@ -377,31 +366,42 @@ class Window(QWidget):
         try:
             self.table.calcEq()
             self.label.setText("Equity calculation success")
-        except:
+            self.PlayersWidget.P1.setEq()
+            self.PlayersWidget.P2.setEq()
+        except Exception as e:
+            print(e)
             self.label.setText("Error in eq calculation")
     def postBlinds(self):
         self.table.postBlinds()
+        self.P1Widget.refresh()
+        self.P2Widget.refresh()
     def call(self):
         self.table.call()
+        self.P1Widget.refresh()
+        self.P2Widget.refresh()
     def bet(self):
         amount = self.inputLine.text()
-        # try:
-        amount = int(amount)
-        self.table.bet(amount)
-        # except Exception as e:
-        #     print(e)
-        #     self.label.setText("Error: Should be a positive number")
+        try:
+            amount = int(amount)
+            self.table.bet(amount)
+            self.P1Widget.refresh()
+            self.P2Widget.refresh()
+        except Exception as e:
+            print(e)
+            self.label.setText("Error: Should be a positive number")
     def fold(self):
         self.table.fold()
+        self.P1Widget.refresh()
+        self.P2Widget.refresh()
 
 if __name__ == "__main__":
-    # try:
+    try:
         app = QApplication(sys.argv)
         cl = obs.ReqClient(host=keys.host, port=keys.port, password=keys.passw, timeout=3)
         window = Window()
         window.show()
         sys.exit(app.exec())
         cl.close()
-    # except Exception as e:
-    #     print(e)
-    #     print("Uh Oh")
+    except Exception as e:
+        print(e)
+        print("Uh Oh")
