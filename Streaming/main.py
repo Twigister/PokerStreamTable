@@ -133,7 +133,7 @@ class Table():
     def setBlinds(self, small: int, big: int):
         self.smallBlind = small
         self.bigBlind = big
-        cl.send("SetInputSettings", {"inputName": "Blinds", "inputSettings": {"text": f"{self.smallBlind}/{self.bigBlind}"}})
+        cl.send("SetInputSettings", {"inputName": "Blinds", "inputSettings": {"text": f"NLH {self.smallBlind}/{self.bigBlind}"}})
     def calcEq(self):
         if (valid_config(self.P1.cards, self.P2.cards, self.board)):
             cards = self.P1.cards + self.P2.cards
@@ -152,7 +152,7 @@ class Table():
         cl.send("SetInputSettings", {"inputName": "P2_name", "inputSettings": {"text": self.P2.name}})
         cl.send("SetInputSettings", {"inputName": "P1_stack", "inputSettings": {"text": str(self.P1.stack)}})
         cl.send("SetInputSettings", {"inputName": "P2_stack", "inputSettings": {"text": str(self.P2.stack)}})
-        cl.send("SetInputSettings", {"inputName": "Blinds", "inputSettings": {"text": f"{self.smallBlind}/{self.bigBlind}"}})
+        cl.send("SetInputSettings", {"inputName": "Blinds", "inputSettings": {"text": f"NLH {self.smallBlind}/{self.bigBlind}"}})
         self.hideAll()
     def hideAll(self):
         try:
@@ -171,7 +171,7 @@ class Table():
     def changeAction(self):
         id = get_item_id("ActionArrow", options.MainSceneName, cl)
         self.actionOn = (self.actionOn + 1) % 2
-        cl.send("SetSceneItemTransform", {"sceneName": "Scene", "sceneItemId": id, "sceneItemTransform": {"positionY": 110 + self.actionOn * 570}})
+        cl.send("SetSceneItemTransform", {"sceneName": "Scene", "sceneItemId": id, "sceneItemTransform": {"positionX": 204 + self.actionOn * 1483}})
     def postBlinds(self):
         self.players[self.dealer].postBlinds(self.smallBlind, False)
         self.players[int(not self.dealer)].postBlinds(self.bigBlind, True)
