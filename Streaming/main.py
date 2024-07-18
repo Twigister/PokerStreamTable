@@ -10,6 +10,11 @@ import obsws_python as obs
 import options
 import traceback
 
+class CustomErr(Exception):
+    def __init__(self, message: str):
+        super().__init__()
+        self.message = str
+
 class Player():
     def __init__(self, name: str, number: int):
         super().__init__()
@@ -27,7 +32,7 @@ class Player():
         self.stack = stack
         self.deposit = stack
         cl.send("SetInputSettings", {"inputName": f"P{self.number}_stack", "inputSettings": {"text": str(stack)}})
-    def setCards(self, cards: [str, str] = ["??", "??"]):
+    def setCards(self, cards: list[str] = ["??", "??"]):
         self.cards = cards
         for i in range(2):
             card = cards[i]
@@ -40,7 +45,7 @@ class Player():
                 cl.send("SetInputSettings", {"inputName": sourceName, "inputSettings": {"text": cards[i], "color": color_code[cards[i][1]]}})
                 cl.send("SetSceneItemEnabled", {"sceneName": sceneName, "sceneItemId": get_item_id(f"{sourceName}?", sceneName, cl), "sceneItemEnabled": False})
             else:
-                self.setCards()
+                return self.setCards()
     def addon(self, amount: int):
         self.stack += amount
         self.deposit += amount
@@ -104,7 +109,7 @@ class Table():
         cl.send("SetInputSettings", {"inputName": f"P{self.dealer+1}dealer", "inputSettings": {"text": "BU"}})
         cl.send("SetInputSettings", {"inputName": f"P{(self.dealer+1)%2+1}dealer", "inputSettings": {"text": "BB"}})
         self.setAction(self.dealer)
-    def setBoard(self, board: [str] = []):
+    def setBoard(self, board: list[str] = []):
         if len(board) > 5:
             raise CustomErr
         for i in range(len(board)):
@@ -145,8 +150,13 @@ class Table():
             self.eq = probas.get_eq(cards, board)
             cl.send("SetInputSettings", {"inputName": "EQ1", "inputSettings": {"text": "{0:.0f}%".format(self.eq[0] * 100)}})
             cl.send("SetInputSettings", {"inputName": "EQ2", "inputSettings": {"text": "{0:.0f}%".format(self.eq[1] * 100)}})
+            cl.send("SetSceneItemEnabled", {"sceneName": options.playerScene[0], "sceneItemId": get_item_id("EQ1", options.playerScene[0], cl), "sceneItemEnabled": True})
+            cl.send("SetSceneItemEnabled", {"sceneName": options.playerScene[1], "sceneItemId": get_item_id("EQ2", options.playerScene[1], cl), "sceneItemEnabled": True})
         else:
-            raise CustomErr
+            raise CustomErr("Cul")
+    def hideEq(self):
+        cl.send("SetSceneItemEnabled", {"sceneName": options.playerScene[0], "sceneItemId": get_item_id("EQ1", options.playerScene[0], cl), "sceneItemEnabled": False})
+        cl.send("SetSceneItemEnabled", {"sceneName": options.playerScene[1], "sceneItemId": get_item_id("EQ2", options.playerScene[1], cl), "sceneItemEnabled": False})
     def sendAll(self):
         cl.send("SetInputSettings", {"inputName": "P1_name", "inputSettings": {"text": self.P1.name}})
         cl.send("SetInputSettings", {"inputName": "P2_name", "inputSettings": {"text": self.P2.name}})
@@ -163,6 +173,7 @@ class Table():
                     l.append(item["sceneItemId"])
             for ids in l:
                 cl.send("SetSceneItemEnabled", {"sceneName": "Scene", "sceneItemId": ids, "sceneItemEnabled": True})
+            self.hideEq()
         except Exception as e:
             print(e)
     def setAction(self, n: int):
@@ -209,6 +220,7 @@ class Table():
         self.setBoard()
         for player in self.players:
             player.setCards()
+            self.hideEq()
         self.postBlinds()
 
 class PlayerWidget(QWidget):
@@ -380,7 +392,7 @@ class Window(QWidget):
             for i in range(len(board)):
                 board[i] = fast_type(board[i])
             if not valid_config(self.table.players[0].cards, self.table.players[1].cards, board):
-                raise CustomErr
+                raise CustomErr("Invalid config")
             self.table.setBoard(board)
             self.calcEq()
             self.label.setText("Successfully updated board")
@@ -453,8 +465,9 @@ if __name__ == "__main__":
         window = Window()
         window.show()
 
-        sys.exit(app.exec())
-        cl.close()
+        ret = app.exec()
+        cl.disconnect()
+        sys.exit(ret)
     except Exception as e:
         print(e)
         print("Uh Oh")
