@@ -1,5 +1,7 @@
 Mise en place du HUD
-	Noms joueurs
-	Dealer
-	Boutons
-Console de commandes sur PC host
+	Noms joueurs [OK]
+	Dealer [OK-ish]
+	Boutons [OK]
+Console de commandes sur PC host [ANNULE]
+logs pour Replayer [IDEE]
+Script pour récupérer les numéros des cartes [TODO]

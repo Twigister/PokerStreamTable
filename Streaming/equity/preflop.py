@@ -1,5 +1,8 @@
 # Beware: Shitty code ahead
 
+import sys
+
+sys.path.append("./equity/")
 from preflopTab import tab
 
 def getHandType(hand: str):
@@ -158,7 +161,6 @@ def genericMatchup(hand1: str, hand2: str):
         res.reverse()
     return res
 
-# print(categorizeMatchup("9h9d", "6h6d"))
 def preflop_eq(cards):
     if letterToRank(cards[0][0]) >= letterToRank(cards[1][0]):
         hand1 = f"{cards[0]}{cards[1]}"

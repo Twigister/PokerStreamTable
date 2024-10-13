@@ -1,5 +1,5 @@
 from holdem_calc import calculate
-from preflop import preflop_eq
+from equity.preflop import preflop_eq
 
 def get_eq(cards, board):
     if len(board) == 0:

@@ -21,6 +21,9 @@ def	is_valid_card(card):
 		return False
 def valid_config(p1, p2, board):
     l = p1 + p2 + board
+    print(l)
+    l = list(filter(("??").__ne__, l))
+    print(l)
     for card in l:
         if not is_valid_card(card):
             return False
