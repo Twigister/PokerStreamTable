@@ -1,2 +1,5 @@
 __pycache__
 **keys.py
+__pycache__
+*.swp
+node_modules
