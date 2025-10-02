@@ -20,12 +20,7 @@ export default function Game() {
     console.log("Deez nuts");
     setPlayers((prev) => prev.map((p: PlayerType) => {
       if (p.id === updatedPlayer.id) {
-        for (const f in p) {
-          // let typeKey = <keyof PlayerType>f;
-          if (updatedPlayer[f] === undefined)
-              updatedPlayer[f] = p[f];
-        }
-        return updatedPlayer;
+        return {...p, ...updatedPlayer};
       } else
         return p;
     }));
