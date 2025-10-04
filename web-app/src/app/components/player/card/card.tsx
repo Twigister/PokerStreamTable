@@ -1,4 +1,5 @@
 import { CardType } from "../types";
+import styles from "./card.module.css"
 
 export default function Card({data}: {data: CardType}) {
   let hIndex = "A23456789TJQK".indexOf(data.rank);
@@ -10,6 +11,6 @@ export default function Card({data}: {data: CardType}) {
   }
 
   return (
-    <div className="card" style={{backgroundPosition: `-${hIndex * 48}px -${vIndex * 64}px`}}></div>
+    <div className={styles.card} style={{backgroundPosition: `-${hIndex * 48}px -${vIndex * 64}px`}}></div>
   );
 };

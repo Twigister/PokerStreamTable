@@ -1,0 +1,44 @@
+.player {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2px;
+  z-index: 1;
+}
+
+/* Cards */
+.card_space {
+  display: flex;
+  position: relative;
+  padding-right: 80px;
+}
+
+/* Player Info */
+.info {
+  display: flex;
+  background-color: #333;
+  z-index: 2;
+  position: relative;
+  text-align: center;
+  width: 200px;
+  border-radius: 5px;
+  border-color: #ccc;
+  border-width: 2px;
+  margin-top: -44px;
+}
+
+.text_info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+
+.pic {
+  width: 60px;
+  height: 60px;
+  border: 2px solid #ccc;
+  border-radius: 0px 5px 5px 0px;
+  margin: -2px -2px -1px 0;
+}

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { PlayerType } from "../types";
-import { SegmentBoundaryTriggerNode } from "next/dist/next-devtools/userspace/app/segment-explorer-node";
+import styles from "./player_controls.module.css"
 
 async function updateName(id: number, newName: string) {
   const res = await fetch(`/api/player/${id}/name`, {
@@ -36,9 +36,27 @@ export default function PlayerControls({player, onPlayerUpdate}: {player: Player
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input value={nameField} type="text" disabled={loading} onChange={(e)=>setNameField(e.target.value)}></input>
-      <input type="submit" disabled={loading} value={loading ? "Sending..." : "Send"}></input>
-    </form>
+    <div className={styles.controls}>
+      <div className={styles.pannel}>
+        <div>
+          <form onSubmit={handleSubmit}>
+            <input value={nameField} type="text" disabled={loading} onChange={(e) => setNameField(e.target.value)}></input>
+            <input type="submit" disabled={loading} value={loading ? "Sending..." : "Send"}></input>
+          </form>
+        </div>
+        <div>
+          <form>
+            <input type="button" value="Check/Call" className={styles.controlButton}/>
+            <input type="button" value="Raise" className={styles.controlButton}/>
+            <input type="button" value="Fold" className={styles.controlButton}/>
+          </form>
+        </div>
+      </div>
+      <div className={styles.sideButtons}>
+        <span className={styles.sideButton}>A</span>
+        <span className={styles.sideButton}>B</span>
+        <span className={styles.sideButton}>C</span>
+      </div>
+    </div>
   );
 }

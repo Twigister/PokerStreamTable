@@ -1,0 +1,5 @@
+.card {
+  height: 64px;
+  width: 48px;
+  background-image: url("/cards.png");
+}

@@ -5,13 +5,18 @@
 ## The WebApp
 The WebApp attached to this project is meant to be used as an admin panel
 ### Features
-* Display cards held by player, board and equities [WIP]
+* Displays cards held by player, board and equities [WIP]
 * Controlling player actions [TODO]
 * Game state handling [TODO]
 * Controlling OBS to handle a layout close to Streamed Livetables [TODO]
 * Adding or removing players to a database [FUTURE]
-* Tracking of player stats (Wins/Losses, HandWin%, maybe poker trackers like features) [FUTURE]
+* Responsive UI [FUTURE]
+* Tracking of player stats (Wins/Losses, HandWin%, maybe poker 
+trackers-like features) using real time ingestion [FUTURE]
 * Auth system to be able to connect multiple tables [FUTURE]
+* Hand logging to paste to your favorite replayer [FUTURE]
+* Support for running it twice [IDEA]
+* Support for PLO and other games [IDEA]
 * And more...
 ## Hardware
 [WIP]
