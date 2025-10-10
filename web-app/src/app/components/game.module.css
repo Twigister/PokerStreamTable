@@ -6,6 +6,9 @@
   position:relative;
   /*background: radial-gradient(circle, rgba(58, 122, 37, 1) 0%, rgba(32, 82, 16, 1) 70%, rgba(32, 82, 16, 1) 100%);*/
 }
+.table {
+  user-select: none;
+}
 .table::after {
   content: "";
   position: absolute;

@@ -1,0 +1,90 @@
+version: "3.9"
+
+services:
+  db-service: # Dev mode
+    build: ./db-service
+    container_name: db-service
+    restart: always
+    networks:
+      - stream-table-network
+    depends_on:
+      - mongodb
+      - mosquitto
+    env_file:
+      - sample.env
+    ports:
+      - "8000:8000"
+  # game-service:
+  # microcontrollers-api:
+  mongodb:
+    build: ./mongodb
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - stream-table-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.hello().isWritablePrimary"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: mongo_express
+    restart: always
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: "mongodb://admin:rootpass@mongodb:27017/admin?replicaSet=rs0"
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_AUTH_DATABASE: admin
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: rootpass
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    networks:
+      - stream-table-network
+    command: ["node", "/app/app.js"]
+
+  mosquitto:
+    build: ./mosquitto
+    container_name: mosquitto
+    restart: always
+    networks:
+      - stream-table-network
+    ports:
+      - "1883:1883"
+
+  # obs-service: # dev mode
+  #   build: ./obs-service
+  #   container_name: obs-service
+  #   restart: always
+  #   networks:
+  #     - stream-table-network
+
+  web-app: # dev mode
+    build: ./web-app
+    container_name: web-app
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./web-app/public:/app/public
+      - ./web-app/src:/app/src
+    networks:
+      - stream-table-network
+
+networks:
+  stream-table-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:

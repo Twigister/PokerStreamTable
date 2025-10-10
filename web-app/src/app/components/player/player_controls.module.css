@@ -1,19 +1,31 @@
 .controls {
-  background-color: black;
   display:flex;
   justify-content: space-between;
   align-items: center;
   z-index: 1;
+}
+.controls form {
+  size: 100%;
 }
 .sideButtons {
   display: flex;
   flex-direction: column;
 }
 .sideButton {
-  color:#fff;
-  background-color: #444;
+  color:#ddd;
+  background-color: #222;
   border-radius: 0 3px 3px 0;
   border: 1px solid #ccc;
+  cursor: pointer;
+  width: 14px;
+}
+.pannel {
+  width: 186px;
+  background-color: #333;
+  height: 77px;
+  border-radius: 5px 0 0 5px;
+  border: 2px solid #bbb;
+  border-right: 0;
 }
 .controlButton {
   border-radius: 5px;
@@ -23,4 +35,5 @@
 }
 .controlButton:hover {
   background-color: #bbb;
+  cursor: pointer;
 }

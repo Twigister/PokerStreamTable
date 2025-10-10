@@ -38,10 +38,9 @@ export default function PlayerControls({player, onPlayerUpdate}: {player: Player
   return (
     <div className={styles.controls}>
       <div className={styles.pannel}>
-        <div>
+        <div className={styles.controlButtons}>
           <form onSubmit={handleSubmit}>
             <input value={nameField} type="text" disabled={loading} onChange={(e) => setNameField(e.target.value)}></input>
-            <input type="submit" disabled={loading} value={loading ? "Sending..." : "Send"}></input>
           </form>
         </div>
         <div>
