@@ -41,15 +41,8 @@ services:
         condition: service_healthy
     ports:
       - "8081:8081"
-    environment:
-      ME_CONFIG_MONGODB_URL: "mongodb://admin:rootpass@mongodb:27017/admin?replicaSet=rs0"
-      ME_CONFIG_MONGODB_SERVER: mongodb
-      ME_CONFIG_MONGODB_PORT: 27017
-      ME_CONFIG_MONGODB_AUTH_DATABASE: admin
-      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
-      ME_CONFIG_MONGODB_ADMINPASSWORD: rootpass
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    env_file:
+      - sample.env
     networks:
       - stream-table-network
     command: ["node", "/app/app.js"]
