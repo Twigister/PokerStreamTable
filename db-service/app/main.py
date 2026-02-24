@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi_mqtt import FastMQTT, MQTTConfig
+from pydantic import BaseModel
 
 from contextlib import asynccontextmanager
 
@@ -78,3 +79,39 @@ def status():
     return {
       "status" : f"Error with {'MQTT' if not mqtt_running else 'MongoDB'}"
     }
+
+class PlayerEdit(BaseModel):
+  name: str | None
+  avatar_url: str | None
+
+class Player(BaseModel):
+  id: int
+  name: str
+  avatar_url: str | None
+  total_played: int = 0
+  total_wins: int = 0
+  current_stack: int = 0
+
+@app.get("/players/{table_id}")
+def get_players():
+  pass
+
+@app.get("/players/{table_id}/{player_id}")
+def get_player():
+  pass
+
+@app.post("/players/{table_id}")
+def add_player(table_id: str, q: Player):
+  pass
+
+@app.patch("/players/{table_id}/{player_id}")
+def change_player():
+  pass
+
+@app.patch("/players/{table_id}/{player_id}/cashout")
+def cashout_player(table_id: str, player_id: int):
+  pass
+
+@app.patch("/players/{table_id}/{player_id}/buy_in")
+def buyin_player(table_id: str, player_id: int, amount: int):
+  pass
