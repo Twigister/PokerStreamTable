@@ -1,3 +1,0 @@
-- IMPORTANT: Remplacer les credentials de MongoDB
-- IMPORTANT: Ajouter des credentials pour MQTT
-- IMPORTANT: Vérifier la connexion à MongoDB

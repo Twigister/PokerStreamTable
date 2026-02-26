@@ -3,3 +3,9 @@ __pycache__
 __pycache__
 *.swp
 node_modules
+**/pyenv.cfg
+**/pyvenv.cfg
+**/lib
+**/lib64
+game-service/bin
+game-service/include

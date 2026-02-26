@@ -29,3 +29,6 @@ trackers-like features) using real time ingestion [FUTURE]
 [WIP]
 ### Wiring diagram
 [WIP]
+
+### Ports
+Below you'll find the list of ports used by my program to communicate between each part of the project, for now they can't be easily modified

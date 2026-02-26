@@ -1,52 +1,6 @@
 version: "3.9"
 
 services:
-  db-service: # Dev mode
-    build: ./db-service
-    container_name: db-service
-    restart: always
-    networks:
-      - stream-table-network
-    depends_on:
-      - mongodb
-      - mosquitto
-    env_file:
-      - sample.env
-    ports:
-      - "8000:8000"
-  # game-service:
-  # microcontrollers-api:
-  mongodb:
-    build: ./mongodb
-    container_name: mongodb
-    restart: always
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    networks:
-      - stream-table-network
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.hello().isWritablePrimary"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  mongo-express:
-    image: mongo-express:1.0.2
-    container_name: mongo_express
-    restart: always
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    ports:
-      - "8081:8081"
-    env_file:
-      - sample.env
-    networks:
-      - stream-table-network
-    command: ["node", "/app/app.js"]
-
   mosquitto:
     build: ./mosquitto
     container_name: mosquitto
@@ -75,9 +29,42 @@ services:
     networks:
       - stream-table-network
 
+  postgre:
+    image: postgres:18.2-bookworm
+    container_name: postgresql
+    restart: always
+    env_file:
+      - ./postgresql/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgresql/postgres_data:/var/lib/postgresql
+      - ./postgresql/db/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - stream-table-network
+    # healthcheck:
+    #   test: ["CMD-SHELL", "pg_isready -"]
+    #   interval: 1m30s
+    #   timeout: 30s
+    #   retries: 5
+    #   start_period: 30s
+
+  game-service:
+    build: ./game-service
+    container_name: game-service
+    restart: always
+    networks:
+      - stream-table-network
+    depends_on:
+      - mosquitto
+    env_file:
+      - sample.env
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres_data:
+
 networks:
   stream-table-network:
     driver: bridge
-
-volumes:
-  mongodb_data:
