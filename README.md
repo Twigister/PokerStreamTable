@@ -31,4 +31,9 @@ trackers-like features) using real time ingestion [FUTURE]
 [WIP]
 
 ### Ports
-Below you'll find the list of ports used by my program to communicate between each part of the project, for now they can't be easily modified
+Below you'll find the list of ports used by each service, for now they can't be easily modified
+game-service: 8000
+mosquitto: 1883
+postgresql: 5432
+OBS service: In: ? Out: ?
+Webapp: 3000

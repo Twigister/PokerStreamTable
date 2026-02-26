@@ -2,7 +2,6 @@ Mise en place du HUD
 	Noms joueurs [OK]
 	Dealer [OK-ish]
 	Boutons [OK]
-Console de commandes sur PC host [ANNULE]
 logs pour Replayer [IDEE]
 Script pour récupérer les numéros des cartes [TODO]
 
@@ -10,3 +9,8 @@ Tout est à refaire :)
 Idées diverses (config)
 Permettre à l'utilisateur de configurer l'asset pour l'affichage des cartes (Optionnel)
 Permettre aux utilisateurs de voir quel joueur est en cours via la bande LED (Pour les setup, assoir les joueurs...)
+
+Prochaine étape:
+Créer une interface pour créer des joueurs
+Permettre à l'utilisateur de voir les joueurs enregistrés
+Permettre à la web-app de drag&drop des joueurs sur la table
