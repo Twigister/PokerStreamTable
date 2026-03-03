@@ -3,6 +3,8 @@ from fastapi import FastAPI
 from fastapi_mqtt import FastMQTT, MQTTConfig
 from contextlib import asynccontextmanager
 
+from app.routes import users
+
 app = FastAPI()
 
 MQTT_CONTAINER = "mosquitto"
@@ -46,6 +48,4 @@ def handle_disconnect(client, packet, exc=None):
 def status():
   return ({"status" : "Running"} if mqtt_running else {"status": "Error with MQTT"})
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-  return {"item_id": item_id, "q": q}
+app.include_router(users.router)

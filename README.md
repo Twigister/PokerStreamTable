@@ -30,7 +30,7 @@ trackers-like features) using real time ingestion [FUTURE]
 ### Wiring diagram
 [WIP]
 
-### Ports
+## Ports
 Below you'll find the list of ports used by each service, for now they can't be easily modified
 game-service: 8000
 mosquitto: 1883

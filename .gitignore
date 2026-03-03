@@ -9,3 +9,4 @@ node_modules
 **/lib64
 game-service/bin
 game-service/include
+postgresql/postgres_data

@@ -23,6 +23,8 @@ services:
     restart: always
     ports:
       - "3000:3000"
+    depends_on:
+      - game-service
     volumes:
       - ./web-app/public:/app/public
       - ./web-app/src:/app/src
@@ -39,28 +41,30 @@ services:
       - "5432:5432"
     volumes:
       - ./postgresql/postgres_data:/var/lib/postgresql
-      - ./postgresql/db/migrations:/docker-entrypoint-initdb.d
     networks:
       - stream-table-network
-    # healthcheck:
-    #   test: ["CMD-SHELL", "pg_isready -"]
-    #   interval: 1m30s
-    #   timeout: 30s
-    #   retries: 5
-    #   start_period: 30s
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
 
   game-service:
+    env_file:
+      - sample.env
     build: ./game-service
     container_name: game-service
     restart: always
-    networks:
-      - stream-table-network
-    depends_on:
-      - mosquitto
-    env_file:
-      - sample.env
     ports:
       - "8000:8000"
+    volumes:
+      - ./game-service:/app # Used for dev
+    depends_on:
+      - mosquitto
+      - postgre
+    networks:
+      - stream-table-network
 
 volumes:
   postgres_data:
