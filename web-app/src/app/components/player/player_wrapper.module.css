@@ -6,3 +6,25 @@
   z-index: 2;
   position: absolute;
 }
+
+.empty_seat {
+  height: 62px;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(255, 255, 255, 0.55);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  gap: 4px;
+}
+
+.empty_seat_label {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.seat_highlight {
+  border-color: #f3c969;
+  background: rgba(243, 201, 105, 0.22);
+}

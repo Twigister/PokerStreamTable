@@ -53,6 +53,7 @@ services:
   game-service:
     env_file:
       - sample.env
+      - game-service/.env
     build: ./game-service
     container_name: game-service
     restart: always

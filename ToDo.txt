@@ -11,7 +11,10 @@ Permettre à l'utilisateur de configurer l'asset pour l'affichage des cartes (Op
 Permettre aux utilisateurs de voir quel joueur est en cours via la bande LED (Pour les setup, assoir les joueurs...)
 
 Prochaine étape:
-Mise en place de la DB (Players / Tables)
+Recommencer la web-app en utilisant du React Atomique ?
+Créer élément (au moins placeholder) pour siège vide
 Créer une interface pour créer des joueurs
 Permettre à l'utilisateur de voir les joueurs enregistrés
 Permettre à la web-app de drag&drop des joueurs sur la table
+Bouton SeatOut
+Logique de jeu pour seat les joueurs (Personne sur le siège cible)

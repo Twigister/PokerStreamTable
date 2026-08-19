@@ -9,10 +9,23 @@ class User(Base):
   __tablename__ = "users"
 
   id = Column(Integer, primary_key=True, index=True)
-  table_id = Column(Integer, nullable=False) # TODO store as a link
   name = Column(String(100), nullable=False)
   image_url = Column(String, nullable=True)
   created_at = Column(DateTime(timezone=True), server_default=func.now())
+  status = Column(String(20), nullable=False) # Utiliser un enum? 
+  table_id = Column(Integer, nullable=True) # TODO store as a db link
+  seat_number = Column(Integer, nullable=True)
+
+class Player(Base):
+  __tablename__ = "players"
+
+  id = Column(Integer, primary_key=True, index=True)
+  name = Column(String(100), nullable=False)
+  image_url = Column(String, nullable=True)
+  created_at = Column(DateTime(timezone=True), server_default=func.now())
+  status = Column(String(20), nullable=False)
+  table_id = Column(Integer, nullable=True)
+  seat_number = Column(Integer, nullable=True)
 
 class Table(Base):
   __tablename__ = "tables"

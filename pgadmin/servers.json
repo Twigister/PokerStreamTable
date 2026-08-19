@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Poker DB",
+      "Group": "Servers",
+      "Host": "postgre",
+      "Port": 5432,
+      "MaintenanceDB": "app_db",
+      "Username": "admin",
+      "SSLMode": "prefer"
+    }
+  }
+}
