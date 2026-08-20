@@ -1,7 +1,7 @@
 "use client";
 
 import { useDrop } from "react-dnd";
-import { PlayerType } from "../types";
+import { PlayerType } from "../../types";
 import Player from "./player";
 import PlayerControls from "./player_controls";
 import styles from "./player_wrapper.module.css";
@@ -9,15 +9,15 @@ import { PLAYER_DRAG_TYPE } from "../../types";
 
 const player_positions = [
   { top: '1%', left: '50%', transform: 'translateX(-50%)' },      // top center
-  { top: '1%', right: '250px' },                                  // top right
-  { top: '20%', right: '10px' },                                  // middle right top
-  { top: '55%', right: '10px' },                                  // middle right bottom
-  { bottom: '1%', right: '250px' },                               // bottom right
+  { top: '1%', left: '75%', transform: 'translateX(-50%)' },      // top right
+  { top: '22%', right: '0' },                                     // middle right top
+  { top: '58%', right: '0' },                                     // middle right bottom
+  { bottom: '1%', left: '75%', transform: 'translateX(-50%)' },   // bottom right
   { bottom: '1%', left: '50%', transform: 'translateX(-50%)' },  // bottom center
-  { bottom: '1%', left: '250px' },                                // bottom left
-  { top: '55%', left: '10px' },                                   // middle left bottom
-  { top: '20%', left: '10px' },                                   // middle left top
-  { top: '1%', left: '250px' },                                   // top left
+  { bottom: '1%', left: '25%', transform: 'translateX(-50%)' },   // bottom left
+  { top: '58%', left: '0' },                                      // middle left bottom
+  { top: '22%', left: '0' },                                      // middle left top
+  { top: '1%', left: '25%', transform: 'translateX(-50%)' },      // top left
 ];
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
@@ -61,9 +61,14 @@ export default function PlayerWrapper({
 
   if (player) {
     return (
-      <div ref={drop} className={styles.player_wrapper} style={player_positions[seatNumber - 1]}>
-        <Player player={player}/>
-        <PlayerControls player={player} onUnseat={onPlayerUnseated}/>
+      <div
+        ref={drop}
+        className={styles.player_wrapper}
+        style={player_positions[seatNumber - 1]}
+        data-seat={seatNumber}
+      >
+        <Player player={player} />
+        <PlayerControls player={player} onUnseat={onPlayerUnseated} />
       </div>
     );
   }
@@ -73,6 +78,8 @@ export default function PlayerWrapper({
       ref={drop}
       className={`${styles.player_wrapper} ${styles.empty_seat} ${isOver && canDrop ? styles.seat_highlight : ""}`}
       style={player_positions[seatNumber - 1]}
+      data-seat={seatNumber}
+      aria-label={`Empty seat ${seatNumber}`}
     >
       <span>Seat {seatNumber}</span>
       <span className={styles.empty_seat_label}>Drop player here</span>

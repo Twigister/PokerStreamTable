@@ -1,39 +1,94 @@
 .controls {
-  display:flex;
+  display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
   z-index: 1;
 }
-.controls form {
-  size: 100%;
-}
+
 .sideButtons {
   display: flex;
   flex-direction: column;
+  width: 24px;
+  flex: 0 0 24px;
 }
+
 .sideButton {
-  color:#ddd;
+  color: #ddd;
   background-color: #222;
   border-radius: 0 3px 3px 0;
   border: 1px solid #ccc;
   cursor: pointer;
-  width: 14px;
+  width: 100%;
+  flex: 1;
+  padding: 0;
 }
-.pannel {
-  width: 186px;
+
+.activeTab {
+  background-color: #555;
+  color: #f3c969;
+}
+
+.panel {
+  width: calc(100% - 24px);
+  max-width: 186px;
+  min-width: 0;
+  min-height: 77px;
   background-color: #333;
-  height: 77px;
   border-radius: 5px 0 0 5px;
   border: 2px solid #bbb;
   border-right: 0;
+  padding: 6px;
 }
+
+.actionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
 .controlButton {
+  min-width: 0;
+  min-height: 28px;
+  padding: 3px 4px;
+  font-size: 11px;
   border-radius: 5px;
-  border: 1px;
-  border-color: #ddd;
+  border: 1px solid #ddd;
   background-color: #aaa;
+  color: #171717;
+  cursor: pointer;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .controlButton:hover {
   background-color: #bbb;
-  cursor: pointer;
+}
+
+.controlButton:focus-visible,
+.sideButton:focus-visible {
+  outline: 2px solid #f3c969;
+  outline-offset: 2px;
+}
+
+.controlButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.unseatButton {
+  background-color: #d9a0a0;
+}
+
+@media (max-width: 1100px) {
+  .panel {
+    min-height: 66px;
+    padding: 4px;
+  }
+
+  .controlButton {
+    font-size: 10px;
+  }
 }

@@ -7,8 +7,8 @@ export interface CardType {
 export type PlayerType = {
   id: number,
   name: string,
-  cards: CardType[],
-  stack: number,
+  cards?: CardType[],
+  stack?: number,
   image_url?: string | null,
   seat_number: number,
 };

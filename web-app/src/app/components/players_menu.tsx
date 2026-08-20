@@ -1,8 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useDrag } from "react-dnd";
-import { PlayerProfileUpdate, PlayerUnseatUpdate, SeatedPlayerUpdate } from "../types";
+import { useDrag, useDragLayer } from "react-dnd";
+import {
+  PLAYER_DRAG_TYPE,
+  PlayerProfileUpdate,
+  PlayerUnseatUpdate,
+  SeatedPlayerUpdate,
+} from "../types";
 import styles from "./players_menu.module.css";
 
 type RegisteredPlayer = PlayerProfileUpdate & {
@@ -14,6 +19,35 @@ type RegisteredPlayer = PlayerProfileUpdate & {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
+function PlayerDragLayer() {
+  const { item, itemType, currentOffset, isDragging } = useDragLayer((monitor) => ({
+    item: monitor.getItem() as RegisteredPlayer | null,
+    itemType: monitor.getItemType(),
+    currentOffset: monitor.getSourceClientOffset(),
+    isDragging: monitor.isDragging(),
+  }));
+
+  if (!isDragging || itemType !== PLAYER_DRAG_TYPE || !item || !currentOffset) {
+    return null;
+  }
+
+  return (
+    <div
+      className={styles.drag_layer}
+      style={{
+        transform: `translate(${currentOffset.x + 12}px, ${currentOffset.y + 12}px)`,
+      }}
+    >
+      <img
+        className={styles.drag_layer_picture}
+        src={item.image_url || "/default_avatar.webp"}
+        alt=""
+      />
+      <span>{item.name}</span>
+    </div>
+  );
+}
+
 export default function PlayersMenu({ onPlayerUpdated, seatedPlayer, unseatedPlayer }: {
   onPlayerUpdated: (player: PlayerProfileUpdate) => void;
   seatedPlayer: SeatedPlayerUpdate | null;
@@ -21,6 +55,7 @@ export default function PlayersMenu({ onPlayerUpdated, seatedPlayer, unseatedPla
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [playerName, setPlayerName] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [registeredPlayers, setRegisteredPlayers] = useState<RegisteredPlayer[]>([]);
   const [isLoadingPlayers, setIsLoadingPlayers] = useState(false);
   const [isRegisteringPlayer, setIsRegisteringPlayer] = useState(false);
@@ -30,6 +65,11 @@ export default function PlayersMenu({ onPlayerUpdated, seatedPlayer, unseatedPla
   const [editImageUrl, setEditImageUrl] = useState("");
   const [isSavingPlayer, setIsSavingPlayer] = useState(false);
   const [playersError, setPlayersError] = useState("");
+  const [draggingPlayer, setDraggingPlayer] = useState<RegisteredPlayer | null>(null);
+
+  const filteredPlayers = registeredPlayers.filter((player) =>
+    player.name.toLocaleLowerCase().includes(searchTerm.trim().toLocaleLowerCase()),
+  );
 
   useEffect(() => {
     async function loadPlayers() {
@@ -172,11 +212,20 @@ export default function PlayersMenu({ onPlayerUpdated, seatedPlayer, unseatedPla
 
   function DraggablePlayerRow({ player }: { player: RegisteredPlayer }) {
     const [{ isDragging }, drag] = useDrag(() => ({
-      type: "registered-player",
+      type: PLAYER_DRAG_TYPE,
       item: player,
       canDrag: player.seat_number === null,
       collect: (monitor) => ({ isDragging: monitor.isDragging() }),
     }), [player]);
+
+    useEffect(() => {
+      if (isDragging) {
+        setDraggingPlayer(player);
+        setIsMenuOpen(false);
+      } else if (draggingPlayer?.id === player.id) {
+        setDraggingPlayer(null);
+      }
+    }, [isDragging, player, draggingPlayer?.id]);
 
     return (
       <li
@@ -268,8 +317,11 @@ export default function PlayersMenu({ onPlayerUpdated, seatedPlayer, unseatedPla
         Players ({registeredPlayers.length})
         <span aria-hidden="true">⌄</span>
       </button>
-      {isMenuOpen && (
-        <div id="players-menu" className={styles.players_panel}>
+      {(isMenuOpen || draggingPlayer) && (
+        <div
+          id="players-menu"
+          className={`${styles.players_panel} ${draggingPlayer ? styles.drag_source_hidden : ""}`}
+        >
           <form className={styles.registration_form} onSubmit={registerPlayer}>
             <label htmlFor="player-name">Register a player</label>
             <div className={styles.registration_fields}>
@@ -288,14 +340,28 @@ export default function PlayersMenu({ onPlayerUpdated, seatedPlayer, unseatedPla
           </form>
           <div className={styles.registered_players}>
             <h2>Registered players</h2>
+            <label className={styles.search_field} htmlFor="player-search">
+              Search players
+            </label>
+            <input
+              id="player-search"
+              className={styles.search_input}
+              type="search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search by name"
+              autoComplete="off"
+            />
             {isLoadingPlayers ? (
               <p>Loading players...</p>
-            ) : registeredPlayers.length > 0 ? (
+            ) : filteredPlayers.length > 0 ? (
               <ul>
-                {registeredPlayers.map((player) => (
+                {filteredPlayers.map((player) => (
                   <DraggablePlayerRow key={player.id} player={player} />
                 ))}
               </ul>
+            ) : registeredPlayers.length > 0 ? (
+              <p>No players match “{searchTerm}”.</p>
             ) : (
               <p>No players registered yet.</p>
             )}
@@ -303,6 +369,7 @@ export default function PlayersMenu({ onPlayerUpdated, seatedPlayer, unseatedPla
           </div>
         </div>
       )}
+      <PlayerDragLayer />
     </div>
   );
 }

@@ -1,5 +1,9 @@
 .card {
+  display: block;
+  flex: 0 0 auto;
   height: 64px;
   width: 48px;
+  border-radius: 4px;
   background-image: url("/cards.png");
+  background-repeat: no-repeat;
 }

@@ -45,3 +45,18 @@ class Table(Base):
 # Contains history of a played hand. Future
 # class Hand(Base):
 #   __tablename__ = "hands"
+
+class Wallet(Base):
+  __tablename__ = "wallets"
+
+  id = Column(Integer, primary_key=True, index=True)
+  owner_id = Column(Integer, nullable=False)
+  currency = Column(String(10), nullable=False)
+  
+class Ledger(Base):
+  __tablename__ = "ledgers"
+
+  id = Column(Integer, primary_key=True, index=True)
+  wallet_id = Column(Integer, nullable=False)
+  amount = Column(Integer, nullable=False)
+  created_at = Column(DateTime(timezone=True), server_default=func.now())
